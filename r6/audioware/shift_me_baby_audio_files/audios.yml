@@ -1,0 +1,60 @@
+version: 1.0.0
+sfx:
+  # ===================== FAILED SHIFT =====================
+  mt_v10_fail_01:  { file: failed_shift/47130969.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_02:  { file: failed_shift/47788216.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_03:  { file: failed_shift/48521068.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_04:  { file: failed_shift/52082925.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_05:  { file: failed_shift/55221054.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_06:  { file: failed_shift/60951360.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_07:  { file: failed_shift/338412634.ogg,     settings: { volume: 1.0 } }
+  mt_v10_fail_08:  { file: failed_shift/682095178.ogg,     settings: { volume: 1.0 } }
+  mt_v10_fail_09:  { file: failed_shift/758182621.ogg,     settings: { volume: 1.0 } }
+  mt_v10_fail_10:  { file: failed_shift/832442612.ogg,     settings: { volume: 1.0 } }
+  mt_v10_fail_11:  { file: failed_shift/941014312.ogg,     settings: { volume: 1.0 } }
+  mt_v10_fail_12:  { file: failed_shift/heart.ogg,         settings: { volume: 1.0 } }
+  mt_v10_fail_13:  { file: failed_shift/laugh1.ogg,        settings: { volume: 1.0 } }
+  mt_v10_fail_14:  { file: failed_shift/laugh2.ogg,        settings: { volume: 1.0 } }
+  mt_v10_fail_15:  { file: failed_shift/laugh3.ogg,        settings: { volume: 1.0 } }
+  mt_v10_fail_16:  { file: failed_shift/pour drink.ogg,    settings: { volume: 1.0 } }
+  mt_v10_fail_17:  { file: failed_shift/19238903.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_18:  { file: failed_shift/20078081.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_19:  { file: failed_shift/21142252.ogg,      settings: { volume: 1.0 } }
+  mt_v10_fail_20:  { file: failed_shift/46494768.ogg,      settings: { volume: 1.0 } }
+
+  # ===================== SMALL REWARD =====================
+  mt_v10_small_01: { file: small_reward/428677728.ogg,     settings: { volume: 0.9 } }
+  mt_v10_small_02: { file: small_reward/534362269.ogg,     settings: { volume: 0.9 } }
+  mt_v10_small_03: { file: small_reward/582170986.ogg,     settings: { volume: 0.9 } }
+  mt_v10_small_04: { file: small_reward/617368518.ogg,     settings: { volume: 0.9 } }
+  mt_v10_small_05: { file: small_reward/meow2.ogg,         settings: { volume: 0.9 } }
+  mt_v10_small_06: { file: small_reward/14698406.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_07: { file: small_reward/16170845.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_08: { file: small_reward/18406290.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_09: { file: small_reward/19020367.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_10: { file: small_reward/44445652.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_11: { file: small_reward/47889200.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_12: { file: small_reward/50539511.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_13: { file: small_reward/55213896.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_14: { file: small_reward/57624006.ogg,      settings: { volume: 0.9 } }
+  mt_v10_small_15: { file: small_reward/60881461.ogg,      settings: { volume: 0.9 } }
+
+  # ===================== LEVEL 10 REWARD =====================
+  mt_v10_level10_01: { file: level_10_reward/387319651.ogg, settings: { volume: 1.0 } }
+  mt_v10_level10_02: { file: level_10_reward/676022071.ogg, settings: { volume: 1.0 } }
+  mt_v10_level10_03: { file: level_10_reward/693989077.ogg, settings: { volume: 1.0 } }
+  mt_v10_level10_04: { file: level_10_reward/788063379.ogg, settings: { volume: 1.0 } }
+  mt_v10_level10_05: { file: level_10_reward/889526456.ogg, settings: { volume: 1.0 } }
+  mt_v10_level10_06: { file: level_10_reward/meow.ogg,      settings: { volume: 1.0 } }
+  mt_v10_level10_07: { file: level_10_reward/69062810.ogg,  settings: { volume: 1.0 } }
+  mt_v10_level10_08: { file: level_10_reward/88438644.ogg,  settings: { volume: 1.0 } }
+  mt_v10_level10_09: { file: level_10_reward/274467516.ogg, settings: { volume: 1.0 } }
+
+  # ===================== LEVEL 20 REWARD =====================
+  mt_v10_level20_01: { file: level_20_reward/925912107.ogg, settings: { volume: 1.1 } }
+  mt_v10_level20_02: { file: level_20_reward/966081374.ogg, settings: { volume: 1.1 } }
+  mt_v10_level20_03: { file: level_20_reward/44445652.ogg,  settings: { volume: 1.1 } }
+  mt_v10_level20_04: { file: level_20_reward/277696867.ogg, settings: { volume: 1.1 } }
+  mt_v10_level20_05: { file: level_20_reward/589368741.ogg, settings: { volume: 1.1 } }
+  mt_v10_level20_06: { file: level_20_reward/666246627.ogg, settings: { volume: 1.1 } }
+  mt_v10_level20_07: { file: level_20_reward/899363921.ogg, settings: { volume: 1.1 } }
