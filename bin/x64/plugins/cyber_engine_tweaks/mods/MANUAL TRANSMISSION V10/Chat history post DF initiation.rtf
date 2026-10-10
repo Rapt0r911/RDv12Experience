@@ -1,0 +1,759 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 ================================================================================\par
+V12 RAPTOR DOUGLAS 911 -- SESSION REFERENCE NOTES\par
+Manual Transmission Mod for Cyberpunk 2077 (CET/Lua)\par
+Save this file. Paste into new conversation to restore context fast.\par
+================================================================================\par
+\par
+-- MOD NAME --\par
+V12 Raptor Douglas 911\par
+(V10 = original base, respected and preserved. V12 = evolved version on 0-Engine)\par
+\par
+-- FILE NAMING CONVENTION --\par
+init_[systems]_edit[N]_v[version].lua\par
+Example: init_DF_edit1_v12.lua\par
+- DF = Dark Future integration included\par
+- No DF prefix = pre-DF version\par
+- editN = which iteration\par
+- Confirmed working = rename backup accordingly\par
+\par
+-- MOD FOLDER PATH --\par
+F:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\plugins\\cyber_engine_tweaks\\mods\\MANUAL TRANSMISSION V10\\\par
+\par
+-- FILE STRUCTURE --\par
+init.lua                        (main -- currently ~1693 lines)\par
+modules/gearbox.lua             (shift engine -- 0-Engine port)\par
+modules/thermalV12.lua          (thermal/stress/adrenaline system)\par
+modules/introSequence.lua       (initiation face + mentor + streak faces)\par
+modules/voiceSystem.lua         (ambient whispers, ghost, highway hypnosis)\par
+modules/clutch.lua              (clutch state machine -- untouched)\par
+modules/utils.lua               (gear widget, display speed -- untouched)\par
+modules/gearboxFeel.lua         (retired but kept for compatibility)\par
+\par
+-- ALL LUA FILES MUST BE PURE ASCII --\par
+No em-dashes (use --), no degree symbols (use C), no curly quotes.\par
+CET uses Lua 5.1 which chokes on Unicode.\par
+\par
+-- CONFIRMED WORKING --\par
+- V12 loads and registers with 0-Engine 0.18.6\par
+- Green/Blue/Red shifting all functional\par
+- Red H-Pattern: clutch required, NumPad H-gate layout\par
+- DF Nerve: bad Red shift = -2.0 nerve, good Red shift = +1.0 nerve\par
+- DFNerveSystem confirmed: Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+- GetNeedValue() and ChangeNeedValue() both confirmed working\par
+- Death audio trigger: fires random from failed_shift pool on PlayerPuppet.OnDeath\par
+- Initiation face sequence: fires after 10 Red fails (first time only)\par
+- Mentor face: fires every 5 Red fails after initiation\par
+- thermalV12.lua loading and updating\par
+- voiceSystem.lua loading\par
+- ono_v_effort_short confirmed working vanilla audio event\par
+- ono_v_pain_short confirmed working vanilla audio event\par
+- GameObject.PlaySoundEvent(player, "eventname") confirmed working from CET Lua\par
+- 0-Engine: WhenReady, SetTimeout, SetInterval, ClearTimer all confirmed working\par
+- Ghost GUI indicators added (stress/adrenaline/brake heat dots) -- not yet confirmed visible\par
+\par
+-- NOT YET WORKING --\par
+- NativeSettings menu: never showed in V12. Original V10 had it working.\par
+  Root cause: timing issue with 0-Engine. Every fix attempt failed.\par
+  Leave for dedicated session. Settings have sensible defaults.\par
+- x10/x20 waving flags: built but not visually confirmed\par
+- x20 lewd face: not confirmed firing\par
+- Ghost GUI dots: built, not confirmed visible in-vehicle\par
+\par
+-- KEY APIS CONFIRMED --\par
+-- 0-Engine\par
+local eng = GetMod("0-Engine")  -- in onInit only, not at require time\par
+eng.Register("ManualTransmissionV12")\par
+eng.WhenReady(function() ... end)\par
+eng.SetTimeout(seconds, fn)\par
+eng.SetInterval(seconds, fn) -- returns handle\par
+eng.ClearTimer(handle)\par
+eng.SetData(key, value)\par
+eng.GetData(key)\par
+\par
+-- Dark Future Nerve\par
+local dfs = Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+dfs:GetNeedValue()        -- returns 0-100\par
+dfs:ChangeNeedValue(n)    -- positive = gain, negative = loss\par
+-- DF HUD blink fires automatically on change\par
+\par
+-- Vanilla Audio Events (confirmed working)\par
+local player = Game.GetPlayer()\par
+GameObject.PlaySoundEvent(player, "ono_v_effort_short")  -- V grunts\par
+GameObject.PlaySoundEvent(player, "ono_v_pain_short")    -- V pain sound\par
+-- All on one line in CET console (Enter = execute, no multiline)\par
+-- Search sounddb.redmodding.org/sfx for more event names\par
+\par
+-- NativeSettings (found, not working in V12)\par
+local ns = GetMod("nativeSettings")  -- returns table\par
+-- addTab, addSubcategory, addSwitch, addRangeFloat, addKeyBinding all present\par
+-- populateOptions present but signature differs from expected\par
+-- fromInit boolean present\par
+\par
+-- MODES --\par
+Green = Sequential (original V10 vision, preserved)\par
+Blue  = Shiftronic (arcade, free gear jump)\par
+Red   = H-Pattern (NumPad only, clutch required)\par
+F key = cycle modes\par
+\par
+-- RED H-GATE LAYOUT --\par
+NumPad7=1st  NumPad8=2nd  NumPad9=3rd\par
+NumPad4=4th  NumPad5=5th  NumPad6=6th\par
+NumPad1=7th  NumPad2=8th  NumPad3=9th\par
+NumPad0=Neutral\par
+\par
+-- AUDIO POOLS (AudioWare .ogg files) --\par
+Path: ...\\audioware\\shift_me_baby_audio_files\\\par
+Subfolders: failed_shift, small_reward, level_10_reward, level_20_reward\par
+heart.ogg is in failed_shift -- good for high adrenaline moments\par
+laugh1/2/3.ogg in failed_shift -- used in initiation sequence\par
+\par
+-- PLANNED / NEXT SESSION --\par
+1. Bike = sequential only lock (5 min -- isBike check in mode cycle)\par
+2. Heart.ogg wired to adrenaline/speed threshold\par
+3. DF Nerve feeding thermalV12 descent phases (6-phase cyber-psychosis system)\par
+4. NativeSettings menu fix (dedicated session)\par
+5. Ghost GUI visibility confirm\par
+6. x10/x20 waving flags visual confirm\par
+7. DF sliders for nerve gain/loss amounts\par
+8. Tire heat GUI (4 oval cross-sections, heat color zones)\par
+9. Engine sound sliders (TweakDB approach, console recon needed)\par
+10. Skippy OS integration (NPC density feeds descent system)\par
+\par
+-- CYBER-PSYCHOSIS DESCENT SYSTEM (designed, not built) --\par
+6 phases driven by DF Nerve value:\par
+Phase 1 (70-100): Clear -- silent\par
+Phase 2 (50-70): Slipping -- suggestive whispers\par
+Phase 3 (30-50): Struggling -- V pushes back\par
+Phase 4 (10-30): Breaking -- chaotic, contradictory\par
+Phase 5 (~0):    The Shift -- sudden quiet, one calm voice\par
+Phase 6 (post):  Unity -- darker, purposeful, outward facing\par
+Moral flip: post-threshold negative actions lose penalties (contextual)\par
+\par
+-- FUTURE MOD CONCEPTS (separate projects) --\par
+"The Now Generation" / "Fight the Future" -- humanity preservation run\par
+  Anti-cyberpunk playthrough, false-flag Vik chair mission\par
+Skippy OS integration -- NPC density feeds paranoia system\par
+NPC optimizer -- spatial hash, 10-20 active NPCs max, 0-Engine QueryNearest\par
+Whisper/AI companion -- Whisper connection, codec face, in-game awareness\par
+Vehicle type restrictions:\par
+  Rayfield/Porsche/Herrera = Red only\par
+  Thorton/Militech/Arquette/Villefort = Green only\par
+  Everything else = free cycle\par
+\par
+-- KNOWN BUGS / LOW PRIORITY --\par
+- Gear stuck after rhythm break: reverse then first gear workaround\par
+  May be intentional mechanical feel, investigate later\par
+- OnPreIntro warning on load: non-fatal, ignore\par
+- 0-Engine storage.json.tmp error: non-fatal, ignore\par
+\par
+-- MODS INSTALLED (relevant) --\par
+0-Engine 0.18.6\par
+Dark Future (with Remorse addon -- nerve changes on moral choices)\par
+Nova City (custom weather states -- mapped in thermalV12 rain multiplier)\par
+Skippy OS (NPC proximity tracking -- future integration)\par
+Giga Core (courier/driving job buffs -- future integration)\par
+Meditate mod (ported to 0-Engine -- meditation zones feed nerve)\par
+NativeSettings\par
+Authentic Shift (TweakDB gear ratios)\par
+NCGT (Night City GT -- tire/surface physics)\par
+Immersive Odometer + Immersive Fuel\par
+\par
+-- WORKFLOW RULES (hard learned) --\par
+1. Never edit init.lua directly for new features\par
+2. New system = new module file first, confirm working, then wire in\par
+3. Always take a named backup before touching init.lua\par
+4. CET console = single line only, use semicolons\par
+5. All files pure ASCII before dropping in\par
+6. Upload current files before any session, don't assume outputs match disk\par
+\par
+================================================================================\line\line\line ================================================================================\par
+V12 RAPTOR DOUGLAS 911 -- SESSION REFERENCE NOTES\par
+Manual Transmission Mod for Cyberpunk 2077 (CET/Lua)\par
+Save this file. Paste into new conversation to restore context fast.\par
+================================================================================\par
+\par
+-- MOD NAME --\par
+V12 Raptor Douglas 911\par
+(V10 = original base, respected and preserved. V12 = evolved version on 0-Engine)\par
+\par
+-- FILE NAMING CONVENTION --\par
+init_[systems]_edit[N]_v[version].lua\par
+Example: init_DF_edit1_v12.lua\par
+- DF = Dark Future integration included\par
+- No DF prefix = pre-DF version\par
+- editN = which iteration\par
+- Confirmed working = rename backup accordingly\par
+\par
+-- MOD FOLDER PATH --\par
+F:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\plugins\\cyber_engine_tweaks\\mods\\MANUAL TRANSMISSION V10\\\par
+\par
+-- FILE STRUCTURE --\par
+init.lua                        (main -- currently ~1693 lines)\par
+modules/gearbox.lua             (shift engine -- 0-Engine port)\par
+modules/thermalV12.lua          (thermal/stress/adrenaline system)\par
+modules/introSequence.lua       (initiation face + mentor + streak faces)\par
+modules/voiceSystem.lua         (ambient whispers, ghost, highway hypnosis)\par
+modules/clutch.lua              (clutch state machine -- untouched)\par
+modules/utils.lua               (gear widget, display speed -- untouched)\par
+modules/gearboxFeel.lua         (retired but kept for compatibility)\par
+\par
+-- ALL LUA FILES MUST BE PURE ASCII --\par
+No em-dashes (use --), no degree symbols (use C), no curly quotes.\par
+CET uses Lua 5.1 which chokes on Unicode.\par
+\par
+-- CONFIRMED WORKING --\par
+- V12 loads and registers with 0-Engine 0.18.6\par
+- Green/Blue/Red shifting all functional\par
+- Red H-Pattern: clutch required, NumPad H-gate layout\par
+- DF Nerve: bad Red shift = -2.0 nerve, good Red shift = +1.0 nerve\par
+- DFNerveSystem confirmed: Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+- GetNeedValue() and ChangeNeedValue() both confirmed working\par
+- Death audio trigger: fires random from failed_shift pool on PlayerPuppet.OnDeath\par
+- Initiation face sequence: fires after 10 Red fails (first time only)\par
+- Mentor face: fires every 5 Red fails after initiation\par
+- thermalV12.lua loading and updating\par
+- voiceSystem.lua loading\par
+- ono_v_effort_short confirmed working vanilla audio event\par
+- ono_v_pain_short confirmed working vanilla audio event\par
+- GameObject.PlaySoundEvent(player, "eventname") confirmed working from CET Lua\par
+- 0-Engine: WhenReady, SetTimeout, SetInterval, ClearTimer all confirmed working\par
+- Ghost GUI indicators added (stress/adrenaline/brake heat dots) -- not yet confirmed visible\par
+\par
+-- NOT YET WORKING --\par
+- NativeSettings menu: never showed in V12. Original V10 had it working.\par
+  Root cause: timing issue with 0-Engine. Every fix attempt failed.\par
+  Leave for dedicated session. Settings have sensible defaults.\par
+- x10/x20 waving flags: built but not visually confirmed\par
+- x20 lewd face: not confirmed firing\par
+- Ghost GUI dots: built, not confirmed visible in-vehicle\par
+\par
+-- KEY APIS CONFIRMED --\par
+-- 0-Engine\par
+local eng = GetMod("0-Engine")  -- in onInit only, not at require time\par
+eng.Register("ManualTransmissionV12")\par
+eng.WhenReady(function() ... end)\par
+eng.SetTimeout(seconds, fn)\par
+eng.SetInterval(seconds, fn) -- returns handle\par
+eng.ClearTimer(handle)\par
+eng.SetData(key, value)\par
+eng.GetData(key)\par
+\par
+-- Dark Future Nerve\par
+local dfs = Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+dfs:GetNeedValue()        -- returns 0-100\par
+dfs:ChangeNeedValue(n)    -- positive = gain, negative = loss\par
+-- DF HUD blink fires automatically on change\par
+\par
+-- Vanilla Audio Events (confirmed working)\par
+local player = Game.GetPlayer()\par
+GameObject.PlaySoundEvent(player, "ono_v_effort_short")  -- V grunts\par
+GameObject.PlaySoundEvent(player, "ono_v_pain_short")    -- V pain sound\par
+-- All on one line in CET console (Enter = execute, no multiline)\par
+-- Search sounddb.redmodding.org/sfx for more event names\par
+\par
+-- NativeSettings (found, not working in V12)\par
+local ns = GetMod("nativeSettings")  -- returns table\par
+-- addTab, addSubcategory, addSwitch, addRangeFloat, addKeyBinding all present\par
+-- populateOptions present but signature differs from expected\par
+-- fromInit boolean present\par
+\par
+-- MODES --\par
+Green = Sequential (original V10 vision, preserved)\par
+Blue  = Shiftronic (arcade, free gear jump)\par
+Red   = H-Pattern (NumPad only, clutch required)\par
+F key = cycle modes\par
+\par
+-- RED H-GATE LAYOUT --\par
+NumPad7=1st  NumPad8=2nd  NumPad9=3rd\par
+NumPad4=4th  NumPad5=5th  NumPad6=6th\par
+NumPad1=7th  NumPad2=8th  NumPad3=9th\par
+NumPad0=Neutral\par
+\par
+-- AUDIO POOLS (AudioWare .ogg files) --\par
+Path: ...\\audioware\\shift_me_baby_audio_files\\\par
+Subfolders: failed_shift, small_reward, level_10_reward, level_20_reward\par
+heart.ogg is in failed_shift -- good for high adrenaline moments\par
+laugh1/2/3.ogg in failed_shift -- used in initiation sequence\par
+\par
+-- PLANNED / NEXT SESSION --\par
+1. Bike = sequential only lock (5 min -- isBike check in mode cycle)\par
+2. Heart.ogg wired to adrenaline/speed threshold\par
+3. DF Nerve feeding thermalV12 descent phases (6-phase cyber-psychosis system)\par
+4. NativeSettings menu fix (dedicated session)\par
+5. Ghost GUI visibility confirm\par
+6. x10/x20 waving flags visual confirm\par
+7. DF sliders for nerve gain/loss amounts\par
+8. Tire heat GUI (4 oval cross-sections, heat color zones)\par
+9. Engine sound sliders (TweakDB approach, console recon needed)\par
+10. Skippy OS integration (NPC density feeds descent system)\par
+\par
+-- CYBER-PSYCHOSIS DESCENT SYSTEM (designed, not built) --\par
+6 phases driven by DF Nerve value:\par
+Phase 1 (70-100): Clear -- silent\par
+Phase 2 (50-70): Slipping -- suggestive whispers\par
+Phase 3 (30-50): Struggling -- V pushes back\par
+Phase 4 (10-30): Breaking -- chaotic, contradictory\par
+Phase 5 (~0):    The Shift -- sudden quiet, one calm voice\par
+Phase 6 (post):  Unity -- darker, purposeful, outward facing\par
+Moral flip: post-threshold negative actions lose penalties (contextual)\par
+\par
+-- FUTURE MOD CONCEPTS (separate projects) --\par
+"The Now Generation" / "Fight the Future" -- humanity preservation run\par
+  Anti-cyberpunk playthrough, false-flag Vik chair mission\par
+Skippy OS integration -- NPC density feeds paranoia system\par
+NPC optimizer -- spatial hash, 10-20 active NPCs max, 0-Engine QueryNearest\par
+Whisper/AI companion -- Whisper connection, codec face, in-game awareness\par
+Vehicle type restrictions:\par
+  Rayfield/Porsche/Herrera = Red only\par
+  Thorton/Militech/Arquette/Villefort = Green only\par
+  Everything else = free cycle\par
+\par
+-- KNOWN BUGS / LOW PRIORITY --\par
+- Gear stuck after rhythm break: reverse then first gear workaround\par
+  May be intentional mechanical feel, investigate later\par
+- OnPreIntro warning on load: non-fatal, ignore\par
+- 0-Engine storage.json.tmp error: non-fatal, ignore\par
+\par
+-- MODS INSTALLED (relevant) --\par
+0-Engine 0.18.6\par
+Dark Future (with Remorse addon -- nerve changes on moral choices)\par
+Nova City (custom weather states -- mapped in thermalV12 rain multiplier)\par
+Skippy OS (NPC proximity tracking -- future integration)\par
+Giga Core (courier/driving job buffs -- future integration)\par
+Meditate mod (ported to 0-Engine -- meditation zones feed nerve)\par
+NativeSettings\par
+Authentic Shift (TweakDB gear ratios)\par
+NCGT (Night City GT -- tire/surface physics)\par
+Immersive Odometer + Immersive Fuel\par
+\par
+-- WORKFLOW RULES (hard learned) --\par
+1. Never edit init.lua directly for new features\par
+2. New system = new module file first, confirm working, then wire in\par
+3. Always take a named backup before touching init.lua\par
+4. CET console = single line only, use semicolons\par
+5. All files pure ASCII before dropping in\par
+6. Upload current files before any session, don't assume outputs match disk\par
+\par
+================================================================================\par
+\par
+================================================================================\par
+SESSION 2 ADDITIONS\par
+================================================================================\par
+\par
+-- CRITICAL AUDIO DISCOVERY --\par
+Working vanilla audio pattern: "player_v_effort_short"\par
+NOT "ono_v_effort_short" -- that prints done but plays NO audio\par
+All V vocal events follow: player_v_[action]\par
+Search sounddb.redmodding.org for "player_v" to find full library\par
+\par
+-- SHIFT MOD INTEGRATION --\par
+Shift is installed. API confirmed:\par
+  local shift = GetMod("Shift")   -- returns table\par
+  shift.api                        -- returns table\par
+  shift.api.SetCameraShakeEnabled(bool)\par
+  shift.api.IsVehicleCameraEnabled()\par
+"intoxicated" preset exists in defaultCameraShakePresets.json\par
+  High intensity (0.05), very slow frequency (0.1-0.25Hz)\par
+  Perfect for drunk camera effect\par
+Phase 2: scale intoxicated preset intensity by drunkLevel dynamically\par
+\par
+-- CAMERA SYSTEM --\par
+cameraSystem_edit1_v12.lua built (545 lines)\par
+Location: V12_DevLoader/modules/cameraSystem.lua\par
+TEST_MODULE_NAME = "cameraSystem" in DevLoader init\par
+Console tests:\par
+  local cs = require("modules/cameraSystem"); cs.testDrunk(0.8)\par
+  cs.testMedit(3)   -- jumps to Milkdrop phase\par
+  cs.testSober()    -- triggers dissolve\par
+\par
+Systems:\par
+  Eyelids     -- top+bottom bars, close with drunk level, organic tremor\par
+  Squigglies  -- drifting character lines, appear >45% drunk\par
+  Meditation  -- 3s particles / 10s patterns / 60s Milkdrop rings+spiral\par
+  Exit        -- 2.5s dissolve on movement or mouse shake\par
+\par
+-- VOICE TRIGGER SYSTEM DESIGN --\par
+Base chance: 20%, rolling 20-30%\par
+Anti-spam: cooldown timer (slider shows "time between" not raw math)\par
+Condition modifiers:\par
+  Near meditation spot  +0.10\par
+  High stress >70       +0.08\par
+  Post-kill descent     +0.15\par
+  Recent voice <30s     -0.25  (most important -- prevents spam)\par
+  BODrunk               -0.10\par
+  Highway hypnosis      +0.05\par
+  Cops engaged          +0.12\par
+\par
+Kill reactions wanted:\par
+  Descent phase 3-4: laugh/dark satisfaction\par
+  Unity phase:       warm, pleased\par
+  Nerve threshold:   concern, fighting it\par
+\par
+-- FORMULAE MODULE PLAN --\par
+formulae.lua: private calculations module\par
+  thermalV12 and voiceTrigger call into it\par
+  Hides weighted multiplier stacks\par
+  Zero performance cost -- just function calls across files\par
+  Slider shows abstracted control, not raw formula\par
+\par
+-- CONFIRMED WORKING THIS SESSION --\par
+- DF Nerve wired: bad Red shift -2.0, good Red shift +1.0\par
+- DF HUD blinks on nerve change confirmed\par
+- Bike sequential lock: F key shows reject flash, stays Green\par
+- Bike forced to Green on vehicle entry\par
+- DevLoader confirmed loading\par
+- Boot sequence confirmed: GHOST IN THE MACHINE [ARMED]\par
+- Death audio confirmed working\par
+- Shift API accessible: GetMod("Shift").api\par
+\par
+-- NEXT SESSION PRIORITIES --\par
+1. Find player_v_ laugh/taunt events on sounddb for kill reactions\par
+2. Build voiceTrigger.lua in DevLoader with RNG + cooldown system\par
+3. Build formulae.lua -- private calculations module\par
+4. Phase 2: wire Shift intoxicated preset intensity to drunkLevel\par
+5. Wire cameraSystem into main mod after DevLoader confirmation\par
+6. NativeSettings menu -- still broken, dedicated session needed\par
+\par
+================================================================================\line\line ================================================================================\par
+V12 RAPTOR DOUGLAS 911 -- SESSION REFERENCE NOTES\par
+Manual Transmission Mod for Cyberpunk 2077 (CET/Lua)\par
+Save this file. Paste into new conversation to restore context fast.\par
+================================================================================\par
+\par
+-- MOD NAME --\par
+V12 Raptor Douglas 911\par
+(V10 = original base, respected and preserved. V12 = evolved version on 0-Engine)\par
+\par
+-- FILE NAMING CONVENTION --\par
+init_[systems]_edit[N]_v[version].lua\par
+Example: init_DF_edit1_v12.lua\par
+- DF = Dark Future integration included\par
+- No DF prefix = pre-DF version\par
+- editN = which iteration\par
+- Confirmed working = rename backup accordingly\par
+\par
+-- MOD FOLDER PATH --\par
+F:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\plugins\\cyber_engine_tweaks\\mods\\MANUAL TRANSMISSION V10\\\par
+\par
+-- FILE STRUCTURE --\par
+init.lua                        (main -- currently ~1693 lines)\par
+modules/gearbox.lua             (shift engine -- 0-Engine port)\par
+modules/thermalV12.lua          (thermal/stress/adrenaline system)\par
+modules/introSequence.lua       (initiation face + mentor + streak faces)\par
+modules/voiceSystem.lua         (ambient whispers, ghost, highway hypnosis)\par
+modules/clutch.lua              (clutch state machine -- untouched)\par
+modules/utils.lua               (gear widget, display speed -- untouched)\par
+modules/gearboxFeel.lua         (retired but kept for compatibility)\par
+\par
+-- ALL LUA FILES MUST BE PURE ASCII --\par
+No em-dashes (use --), no degree symbols (use C), no curly quotes.\par
+CET uses Lua 5.1 which chokes on Unicode.\par
+\par
+-- CONFIRMED WORKING --\par
+- V12 loads and registers with 0-Engine 0.18.6\par
+- Green/Blue/Red shifting all functional\par
+- Red H-Pattern: clutch required, NumPad H-gate layout\par
+- DF Nerve: bad Red shift = -2.0 nerve, good Red shift = +1.0 nerve\par
+- DFNerveSystem confirmed: Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+- GetNeedValue() and ChangeNeedValue() both confirmed working\par
+- Death audio trigger: fires random from failed_shift pool on PlayerPuppet.OnDeath\par
+- Initiation face sequence: fires after 10 Red fails (first time only)\par
+- Mentor face: fires every 5 Red fails after initiation\par
+- thermalV12.lua loading and updating\par
+- voiceSystem.lua loading\par
+- ono_v_effort_short confirmed working vanilla audio event\par
+- ono_v_pain_short confirmed working vanilla audio event\par
+- GameObject.PlaySoundEvent(player, "eventname") confirmed working from CET Lua\par
+- 0-Engine: WhenReady, SetTimeout, SetInterval, ClearTimer all confirmed working\par
+- Ghost GUI indicators added (stress/adrenaline/brake heat dots) -- not yet confirmed visible\par
+\par
+-- NOT YET WORKING --\par
+- NativeSettings menu: never showed in V12. Original V10 had it working.\par
+  Root cause: timing issue with 0-Engine. Every fix attempt failed.\par
+  Leave for dedicated session. Settings have sensible defaults.\par
+- x10/x20 waving flags: built but not visually confirmed\par
+- x20 lewd face: not confirmed firing\par
+- Ghost GUI dots: built, not confirmed visible in-vehicle\par
+\par
+-- KEY APIS CONFIRMED --\par
+-- 0-Engine\par
+local eng = GetMod("0-Engine")  -- in onInit only, not at require time\par
+eng.Register("ManualTransmissionV12")\par
+eng.WhenReady(function() ... end)\par
+eng.SetTimeout(seconds, fn)\par
+eng.SetInterval(seconds, fn) -- returns handle\par
+eng.ClearTimer(handle)\par
+eng.SetData(key, value)\par
+eng.GetData(key)\par
+\par
+-- Dark Future Nerve\par
+local dfs = Game.GetScriptableSystemsContainer():Get("DarkFuture.Needs.DFNerveSystem")\par
+dfs:GetNeedValue()        -- returns 0-100\par
+dfs:ChangeNeedValue(n)    -- positive = gain, negative = loss\par
+-- DF HUD blink fires automatically on change\par
+\par
+-- Vanilla Audio Events (confirmed working)\par
+local player = Game.GetPlayer()\par
+GameObject.PlaySoundEvent(player, "ono_v_effort_short")  -- V grunts\par
+GameObject.PlaySoundEvent(player, "ono_v_pain_short")    -- V pain sound\par
+-- All on one line in CET console (Enter = execute, no multiline)\par
+-- Search sounddb.redmodding.org/sfx for more event names\par
+\par
+-- NativeSettings (found, not working in V12)\par
+local ns = GetMod("nativeSettings")  -- returns table\par
+-- addTab, addSubcategory, addSwitch, addRangeFloat, addKeyBinding all present\par
+-- populateOptions present but signature differs from expected\par
+-- fromInit boolean present\par
+\par
+-- MODES --\par
+Green = Sequential (original V10 vision, preserved)\par
+Blue  = Shiftronic (arcade, free gear jump)\par
+Red   = H-Pattern (NumPad only, clutch required)\par
+F key = cycle modes\par
+\par
+-- RED H-GATE LAYOUT --\par
+NumPad7=1st  NumPad8=2nd  NumPad9=3rd\par
+NumPad4=4th  NumPad5=5th  NumPad6=6th\par
+NumPad1=7th  NumPad2=8th  NumPad3=9th\par
+NumPad0=Neutral\par
+\par
+-- AUDIO POOLS (AudioWare .ogg files) --\par
+Path: ...\\audioware\\shift_me_baby_audio_files\\\par
+Subfolders: failed_shift, small_reward, level_10_reward, level_20_reward\par
+heart.ogg is in failed_shift -- good for high adrenaline moments\par
+laugh1/2/3.ogg in failed_shift -- used in initiation sequence\par
+\par
+-- PLANNED / NEXT SESSION --\par
+1. Bike = sequential only lock (5 min -- isBike check in mode cycle)\par
+2. Heart.ogg wired to adrenaline/speed threshold\par
+3. DF Nerve feeding thermalV12 descent phases (6-phase cyber-psychosis system)\par
+4. NativeSettings menu fix (dedicated session)\par
+5. Ghost GUI visibility confirm\par
+6. x10/x20 waving flags visual confirm\par
+7. DF sliders for nerve gain/loss amounts\par
+8. Tire heat GUI (4 oval cross-sections, heat color zones)\par
+9. Engine sound sliders (TweakDB approach, console recon needed)\par
+10. Skippy OS integration (NPC density feeds descent system)\par
+\par
+-- CYBER-PSYCHOSIS DESCENT SYSTEM (designed, not built) --\par
+6 phases driven by DF Nerve value:\par
+Phase 1 (70-100): Clear -- silent\par
+Phase 2 (50-70): Slipping -- suggestive whispers\par
+Phase 3 (30-50): Struggling -- V pushes back\par
+Phase 4 (10-30): Breaking -- chaotic, contradictory\par
+Phase 5 (~0):    The Shift -- sudden quiet, one calm voice\par
+Phase 6 (post):  Unity -- darker, purposeful, outward facing\par
+Moral flip: post-threshold negative actions lose penalties (contextual)\par
+\par
+-- FUTURE MOD CONCEPTS (separate projects) --\par
+"The Now Generation" / "Fight the Future" -- humanity preservation run\par
+  Anti-cyberpunk playthrough, false-flag Vik chair mission\par
+Skippy OS integration -- NPC density feeds paranoia system\par
+NPC optimizer -- spatial hash, 10-20 active NPCs max, 0-Engine QueryNearest\par
+Whisper/AI companion -- Whisper connection, codec face, in-game awareness\par
+Vehicle type restrictions:\par
+  Rayfield/Porsche/Herrera = Red only\par
+  Thorton/Militech/Arquette/Villefort = Green only\par
+  Everything else = free cycle\par
+\par
+-- KNOWN BUGS / LOW PRIORITY --\par
+- Gear stuck after rhythm break: reverse then first gear workaround\par
+  May be intentional mechanical feel, investigate later\par
+- OnPreIntro warning on load: non-fatal, ignore\par
+- 0-Engine storage.json.tmp error: non-fatal, ignore\par
+\par
+-- MODS INSTALLED (relevant) --\par
+0-Engine 0.18.6\par
+Dark Future (with Remorse addon -- nerve changes on moral choices)\par
+Nova City (custom weather states -- mapped in thermalV12 rain multiplier)\par
+Skippy OS (NPC proximity tracking -- future integration)\par
+Giga Core (courier/driving job buffs -- future integration)\par
+Meditate mod (ported to 0-Engine -- meditation zones feed nerve)\par
+NativeSettings\par
+Authentic Shift (TweakDB gear ratios)\par
+NCGT (Night City GT -- tire/surface physics)\par
+Immersive Odometer + Immersive Fuel\par
+\par
+-- WORKFLOW RULES (hard learned) --\par
+1. Never edit init.lua directly for new features\par
+2. New system = new module file first, confirm working, then wire in\par
+3. Always take a named backup before touching init.lua\par
+4. CET console = single line only, use semicolons\par
+5. All files pure ASCII before dropping in\par
+6. Upload current files before any session, don't assume outputs match disk\par
+\par
+================================================================================\par
+\par
+================================================================================\par
+SESSION 2 ADDITIONS\par
+================================================================================\par
+\par
+-- CRITICAL AUDIO DISCOVERY --\par
+Working vanilla audio pattern: "player_v_effort_short"\par
+NOT "ono_v_effort_short" -- that prints done but plays NO audio\par
+All V vocal events follow: player_v_[action]\par
+Search sounddb.redmodding.org for "player_v" to find full library\par
+\par
+-- SHIFT MOD INTEGRATION --\par
+Shift is installed. API confirmed:\par
+  local shift = GetMod("Shift")   -- returns table\par
+  shift.api                        -- returns table\par
+  shift.api.SetCameraShakeEnabled(bool)\par
+  shift.api.IsVehicleCameraEnabled()\par
+"intoxicated" preset exists in defaultCameraShakePresets.json\par
+  High intensity (0.05), very slow frequency (0.1-0.25Hz)\par
+  Perfect for drunk camera effect\par
+Phase 2: scale intoxicated preset intensity by drunkLevel dynamically\par
+\par
+-- CAMERA SYSTEM --\par
+cameraSystem_edit1_v12.lua built (545 lines)\par
+Location: V12_DevLoader/modules/cameraSystem.lua\par
+TEST_MODULE_NAME = "cameraSystem" in DevLoader init\par
+Console tests:\par
+  local cs = require("modules/cameraSystem"); cs.testDrunk(0.8)\par
+  cs.testMedit(3)   -- jumps to Milkdrop phase\par
+  cs.testSober()    -- triggers dissolve\par
+\par
+Systems:\par
+  Eyelids     -- top+bottom bars, close with drunk level, organic tremor\par
+  Squigglies  -- drifting character lines, appear >45% drunk\par
+  Meditation  -- 3s particles / 10s patterns / 60s Milkdrop rings+spiral\par
+  Exit        -- 2.5s dissolve on movement or mouse shake\par
+\par
+-- VOICE TRIGGER SYSTEM DESIGN --\par
+Base chance: 20%, rolling 20-30%\par
+Anti-spam: cooldown timer (slider shows "time between" not raw math)\par
+Condition modifiers:\par
+  Near meditation spot  +0.10\par
+  High stress >70       +0.08\par
+  Post-kill descent     +0.15\par
+  Recent voice <30s     -0.25  (most important -- prevents spam)\par
+  BODrunk               -0.10\par
+  Highway hypnosis      +0.05\par
+  Cops engaged          +0.12\par
+\par
+Kill reactions wanted:\par
+  Descent phase 3-4: laugh/dark satisfaction\par
+  Unity phase:       warm, pleased\par
+  Nerve threshold:   concern, fighting it\par
+\par
+-- FORMULAE MODULE PLAN --\par
+formulae.lua: private calculations module\par
+  thermalV12 and voiceTrigger call into it\par
+  Hides weighted multiplier stacks\par
+  Zero performance cost -- just function calls across files\par
+  Slider shows abstracted control, not raw formula\par
+\par
+-- CONFIRMED WORKING THIS SESSION --\par
+- DF Nerve wired: bad Red shift -2.0, good Red shift +1.0\par
+- DF HUD blinks on nerve change confirmed\par
+- Bike sequential lock: F key shows reject flash, stays Green\par
+- Bike forced to Green on vehicle entry\par
+- DevLoader confirmed loading\par
+- Boot sequence confirmed: GHOST IN THE MACHINE [ARMED]\par
+- Death audio confirmed working\par
+- Shift API accessible: GetMod("Shift").api\par
+\par
+-- NEXT SESSION PRIORITIES --\par
+1. Find player_v_ laugh/taunt events on sounddb for kill reactions\par
+2. Build voiceTrigger.lua in DevLoader with RNG + cooldown system\par
+3. Build formulae.lua -- private calculations module\par
+4. Phase 2: wire Shift intoxicated preset intensity to drunkLevel\par
+5. Wire cameraSystem into main mod after DevLoader confirmation\par
+6. NativeSettings menu -- still broken, dedicated session needed\par
+\par
+================================================================================\par
+\par
+================================================================================\par
+SESSION 3 ADDITIONS\par
+================================================================================\par
+\par
+-- ARCHITECTURE --\par
+Two mod structure confirmed:\par
+  MANUAL TRANSMISSION V10 = the ENGINE (mechanics)\par
+  V12_raptor_douglas_911_driving_experience = the SOUL (immersion)\par
+  Connected via 0-Engine shared data bus (eng.SetData/GetData)\par
+  Repo: github.com/[user]/CP2077-Nexus (public releases)\par
+  Private dev repo recommended for formulae.lua and work-in-progress\par
+\par
+-- AUDIO CONFIRMED WORKING --\par
+Pattern: "cmn_generic_female_" and "sq30_" prefix events work\par
+"player_v_" prefix confirmed\par
+"ono_v_" prefix = prints but NO audio\par
+\par
+Confirmed events:\par
+  sq30_sc06_Judy_screams_frustrated          CONFIRMED\par
+  player_v_effort_short                      CONFIRMED\par
+  player_v_pain_short                        CONFIRMED\par
+\par
+Untested but found via sounddb:\par
+  cmn_generic_female_drugged_aggro_short     (7 variants, frustration grunts)\par
+  cmn_generic_female_drugged_laughter        (20+ variants, dark laugh)\par
+  cmn_generic_female_drugged_humming         (shower/pleasant)\par
+  cmn_generic_female_drugged_mumbling_long   (panic breathing)\par
+  cmn_generic_female_drugged_gasp_pain       (pain gasp)\par
+  cmn_generic_female_drugged_dance           (high energy/panic)\par
+  cmn_generic_female_drugged_sniff_short_rare (post-intox)\par
+  q307_03_hospital_v_tired_tinnitus_01       (PERFECT for near-death)\par
+  q306_sc_08_flashbang                       (ringing fade)\par
+  amb_int_EM_elem_mech_elevator_shaft_rumble_01_loop (onset ambient)\par
+  amb_q301_roof_wind_rumble                  (creepy background)\par
+  q108_sc_02_drunk_approach                  (paranoid background)\par
+\par
+-- FILES BUILT THIS SESSION --\par
+voiceTrigger_edit1_v12.lua (475 lines)\par
+  Location: V12_DevLoader/modules/voiceTrigger.lua\par
+  Tests: vt.testPool("frustration"), vt.testHeartbeat(0.8), vt.testDeath()\par
+  Irregular heartbeat system with SetTimeout chaining\par
+  Death heartbeat: slows, gaps widen, final beat, tinnitus ring\par
+\par
+cameraSystem_edit1_v12.lua (545 lines)\par
+  Location: V12_DevLoader/modules/cameraSystem.lua\par
+  Tests: cs.testDrunk(0.8), cs.testMedit(3), cs.testSober()\par
+  NOT YET TESTED IN GAME\par
+\par
+-- SKIPPY OS INTEGRATION POTENTIAL --\par
+scan.lua: targets.hostiles() = NPC proximity/density feed for paranoia system\par
+kills.lua: kill observer = feeds depravity and voice triggers\par
+bond.lua: progression system = model for our own depravity/alignment meters\par
+panic.lua: hp_fraction() = confirmed working health percentage calc\par
+\par
+-- CORE DESIGN SYSTEMS (build in formulae.lua) --\par
+\par
+ALIGNMENT METER:\par
+  intended = 1.0  (slow: who V wanted to be)\par
+  current  = 1.0  (fast: who V is becoming)\par
+  drift    = gap between them = internal battle intensity\par
+  Voice peaks at high drift\par
+  When current stays low, intended slowly follows = disengagement\par
+  Quiet at zero drift is the most unsettling resolution\par
+\par
+DEPRAVITY METER:\par
+  Slow accumulation of choices history\par
+  Nerve = weather (fast). Depravity = climate (slow)\par
+  High depravity: clean actions give less nerve, bad cost less nerve\par
+  V becomes indifferent, not evil. More terrifying.\par
+\par
+DEPENDENCY SYSTEM:\par
+  Per-substance: alcohol, stimulants\par
+  Builds with use, decays slowly sober\par
+  Effect formula: base * (1 + depravity*0.8) * (1 - dependency*0.6)\par
+  Tolerance trap: heavy users get nothing, and depravity means clean\par
+  actions feel hollow too. Trapped.\par
+\par
+DIAMOND DISTRIBUTION (voice frequency):\par
+  Inverted bell curve: rarest at nerve=100 (calm) and nerve=0 (unified)\par
+  Most frequent at nerve 30-60 (the battle zone)\par
+  Formula: 0.35 * exp(-(|nerve-0.45|^2) / (2*0.25^2))\par
+\par
+-- NEXT SESSION --\par
+1. Build formulae.lua in DevLoader\par
+2. Test voiceTrigger pool events (find which cmn_ events fire audio)\par
+3. Test cameraSystem eyelids and squigglies in game\par
+4. Wire Shift intoxicated preset to drunk level (Phase 2)\par
+5. Skippy OS scan.lua integration for NPC density\par
+================================================================================\par
+}
+ 
